@@ -98,7 +98,8 @@ app.post("/upvote", async (req, res) => {
 // Get Posts with Upvotes
 app.get("/posts", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const { month } = req.query;
+    let query = `
       SELECT 
         posts.id, posts.content, posts.created_at, 
         users.username, users.first_name, users.photo_url,
@@ -106,9 +107,27 @@ app.get("/posts", async (req, res) => {
       FROM posts
       JOIN users ON posts.user_id = users.id
       LEFT JOIN upvotes ON posts.id = upvotes.post_id
-      GROUP BY posts.id, users.username, users.first_name, users.photo_url
-      ORDER BY upvotes DESC, posts.created_at DESC
-    `);
+    `;
+    let params = [];
+    if (month) {
+      // Calculate first and next month
+      const [year, mon] = month.split("-");
+      const firstDay = `${year}-${mon}-01`;
+      let nextMonth, nextYear;
+      if (mon === "12") {
+        nextMonth = "01";
+        nextYear = (parseInt(year) + 1).toString();
+      } else {
+        nextMonth = (parseInt(mon) + 1).toString().padStart(2, "0");
+        nextYear = year;
+      }
+      const firstDayNextMonth = `${nextYear}-${nextMonth}-01`;
+      query += ` WHERE posts.created_at >= $1 AND posts.created_at < $2`;
+      params.push(firstDay, firstDayNextMonth);
+    }
+    query += ` GROUP BY posts.id, users.username, users.first_name, users.photo_url
+      ORDER BY upvotes DESC, posts.created_at DESC`;
+    const result = await pool.query(query, params);
     res.send(result.rows);
   } catch (err) {
     res.status(500).send(err);
@@ -118,6 +137,11 @@ app.get("/posts", async (req, res) => {
 // Serve index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Serve community.html
+app.get("/community", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "community.html"));
 });
 
 app.listen(3000, () => {
