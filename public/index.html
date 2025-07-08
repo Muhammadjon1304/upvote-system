@@ -2,105 +2,409 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Telegram Upvote System</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: #f9f9f9;
+      * {
         margin: 0;
         padding: 0;
+        box-sizing: border-box;
       }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #0f0f23 0%,
+          #1a1a2e 50%,
+          #16213e 100%
+        );
+        min-height: 100vh;
+        line-height: 1.6;
+        color: #e2e8f0;
+      }
+
+      .background-pattern {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: radial-gradient(
+            circle at 20% 50%,
+            rgba(99, 102, 241, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(139, 92, 246, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 60% 80%,
+            rgba(59, 130, 246, 0.05) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+      }
+
       header {
-        background: #0088cc;
-        color: white;
-        padding: 15px 20px;
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+        padding: 20px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
       }
-      .container {
-        max-width: 600px;
-        margin: 30px auto;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+      .logo {
+        font-size: 28px;
+        font-weight: 700;
+        color: #f1f5f9;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
       }
-      .post {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 10px;
-        background: #fff;
+
+      .logo::before {
+        content: "📱";
+        font-size: 32px;
       }
-      .post button {
-        background: #0088cc;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 5px;
-        cursor: pointer;
-      }
-      .post button:hover {
-        background: #0077b3;
-      }
-      .new-post textarea {
-        width: 100%;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        margin-bottom: 10px;
-        resize: none;
-      }
-      .new-post button {
-        background: #0088cc;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 5px;
-        cursor: pointer;
-      }
-      .new-post button:hover {
-        background: #0077b3;
-      }
-      .login {
-        text-align: center;
-        margin: 50px 0;
-      }
-      .user-info img {
-        border-radius: 50%;
-        vertical-align: middle;
-        width: 30px;
-        height: 30px;
-      }
+
       .user-info {
         display: flex;
         align-items: center;
+        gap: 12px;
+        background: rgba(30, 41, 59, 0.8);
+        padding: 8px 16px;
+        border-radius: 25px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #e2e8f0;
+      }
+
+      .user-info img {
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        border: 2px solid #6366f1;
+      }
+
+      .logout-btn {
+        background: linear-gradient(45deg, #ff6b6b, #ff5722);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+      }
+
+      .logout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      .card {
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        transition: transform 0.3s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+      }
+
+      .login-card {
+        text-align: center;
+        padding: 60px 30px;
+      }
+
+      .login-title {
+        font-size: 32px;
+        color: #f1f5f9;
+        margin-bottom: 16px;
+        font-weight: 600;
+      }
+
+      .login-subtitle {
+        color: #94a3b8;
+        margin-bottom: 40px;
+        font-size: 18px;
+      }
+
+      .new-post {
+        margin-bottom: 30px;
+      }
+
+      .new-post textarea {
+        width: 100%;
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid rgba(99, 102, 241, 0.3);
+        margin-bottom: 20px;
+        resize: vertical;
+        min-height: 120px;
+        font-family: inherit;
+        font-size: 16px;
+        background: rgba(15, 23, 42, 0.8);
+        color: #e2e8f0;
+        transition: border-color 0.3s ease;
+      }
+
+      .new-post textarea:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+      }
+
+      .new-post textarea::placeholder {
+        color: #64748b;
+      }
+
+      .submit-btn {
+        background: linear-gradient(45deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+      }
+
+      .posts-header {
+        color: #f1f5f9;
+        font-size: 24px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .post {
+        background: rgba(15, 23, 42, 0.9);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .post::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(45deg, #6366f1, #8b5cf6);
+      }
+
+      .post:hover {
+        transform: translateX(5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border-color: rgba(99, 102, 241, 0.4);
+      }
+
+      .post-author {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        color: #cbd5e1;
+        font-weight: 600;
+      }
+
+      .post-author::before {
+        content: "👤";
+        font-size: 20px;
+      }
+
+      .post-content {
+        color: #e2e8f0;
+        font-size: 16px;
+        line-height: 1.7;
+        margin-bottom: 20px;
+      }
+
+      .post-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .upvote-count {
+        display: flex;
+        align-items: center;
         gap: 8px;
+        color: #6366f1;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .upvote-btn {
+        background: linear-gradient(45deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .upvote-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      }
+
+      .upvote-btn::before {
+        content: "👍";
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #94a3b8;
+        font-size: 18px;
+      }
+
+      .loading::before {
+        content: "⏳";
+        margin-right: 10px;
+      }
+
+      .no-posts {
+        text-align: center;
+        padding: 60px;
+        color: #94a3b8;
+        font-size: 18px;
+      }
+
+      .no-posts::before {
+        content: "📭";
+        display: block;
+        font-size: 48px;
+        margin-bottom: 15px;
+      }
+
+      @media (max-width: 768px) {
+        .header-content {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .container {
+          margin: 20px auto;
+          padding: 0 15px;
+        }
+
+        .card {
+          padding: 20px;
+          margin-bottom: 20px;
+        }
+
+        .login-card {
+          padding: 40px 20px;
+        }
+
+        .login-title {
+          font-size: 26px;
+        }
+
+        .new-post textarea {
+          min-height: 100px;
+        }
+
+        .post {
+          padding: 20px;
+        }
+
+        .post:hover {
+          transform: none;
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .fade-in {
+        animation: fadeIn 0.5s ease-out;
       }
     </style>
   </head>
   <body>
+    <div class="background-pattern"></div>
+
     <header>
-      <div><b>Telegram Upvote</b></div>
-      <div class="user-info" id="user-info" style="display: none"></div>
+      <div class="header-content">
+        <a href="#" class="logo">Telegram Upvote</a>
+        <div style="display: flex; align-items: center; gap: 15px">
+          <div class="user-info" id="user-info" style="display: none"></div>
+          <button
+            onclick="logout()"
+            class="logout-btn"
+            id="logout-btn"
+            style="display: none"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
     </header>
-    <button
-      onclick="logout()"
-      style="
-        background: #ff4d4d;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 5px;
-        cursor: pointer;
-      "
-    >
-      Logout
-    </button>
+
     <div class="container">
       <!-- Login -->
-      <div class="login" id="login-section">
+      <div class="card login-card fade-in" id="login-section">
+        <h1 class="login-title">Welcome Back!</h1>
+        <p class="login-subtitle">
+          Connect with Telegram to start sharing and voting
+        </p>
         <script
           async
           src="https://telegram.org/js/telegram-widget.js?7"
@@ -113,19 +417,23 @@
       </div>
 
       <!-- New Post -->
-      <div class="new-post" id="post-section" style="display: none">
+      <div
+        class="card new-post fade-in"
+        id="post-section"
+        style="display: none"
+      >
         <textarea
           id="post-content"
-          rows="3"
-          placeholder="Write something..."
-        ></textarea
-        ><br />
-        <button onclick="createPost()">Submit Post</button>
+          placeholder="What's on your mind? Share your thoughts with the community..."
+        ></textarea>
+        <button onclick="createPost()" class="submit-btn">Share Post</button>
       </div>
 
       <!-- Posts -->
-      <h3 id="posts-heading" style="display: none">Posts</h3>
-      <div id="posts" style="display: none">Loading...</div>
+      <div class="card fade-in" id="posts-container" style="display: none">
+        <h3 class="posts-header">Community Posts</h3>
+        <div id="posts" class="loading">Loading posts...</div>
+      </div>
     </div>
 
     <script>
@@ -135,15 +443,16 @@
         currentUser = user;
         document.getElementById("login-section").style.display = "none";
         document.getElementById("user-info").style.display = "flex";
+        document.getElementById("logout-btn").style.display = "block";
         document.getElementById("post-section").style.display = "block";
-        document.getElementById("posts-heading").style.display = "block";
-        document.getElementById("posts").style.display = "block";
+        document.getElementById("posts-container").style.display = "block";
 
-        document.getElementById("user-info").innerHTML = `<img src="${
-          user.photo_url
-        }" alt=""> <span><b>${user.first_name}</b> (@${
-          user.username || ""
-        })</span>`;
+        document.getElementById("user-info").innerHTML = `
+          <img src="${user.photo_url}" alt="Profile"> 
+          <span><b>${user.first_name}</b> ${
+          user.username ? `(@${user.username})` : ""
+        }</span>
+        `;
 
         fetch("/auth/telegram", {
           method: "POST",
@@ -154,12 +463,20 @@
           .then((u) => {
             currentUser.db_id = u.id;
             loadPosts();
+          })
+          .catch((err) => {
+            console.error("Auth error:", err);
           });
       }
 
       function createPost() {
-        const content = document.getElementById("post-content").value;
+        const content = document.getElementById("post-content").value.trim();
         if (!content) return;
+
+        const submitBtn = document.querySelector(".submit-btn");
+        submitBtn.textContent = "Posting...";
+        submitBtn.disabled = true;
+
         fetch("/post", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -169,6 +486,13 @@
           .then(() => {
             document.getElementById("post-content").value = "";
             loadPosts();
+          })
+          .catch((err) => {
+            console.error("Post error:", err);
+          })
+          .finally(() => {
+            submitBtn.textContent = "Share Post";
+            submitBtn.disabled = false;
           });
       }
 
@@ -177,7 +501,11 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ user_id: currentUser.db_id, post_id: postId }),
-        }).then(() => loadPosts());
+        })
+          .then(() => loadPosts())
+          .catch((err) => {
+            console.error("Upvote error:", err);
+          });
       }
 
       function loadPosts() {
@@ -186,28 +514,51 @@
           .then((posts) => {
             const postsDiv = document.getElementById("posts");
             if (posts.length === 0) {
-              postsDiv.innerHTML = "<p>No posts yet.</p>";
+              postsDiv.innerHTML =
+                '<div class="no-posts">No posts yet. Be the first to share!</div>';
               return;
             }
             postsDiv.innerHTML = posts
               .map(
                 (p) => `
-          <div class="post">
-            <p><b>${p.first_name}</b> (@${p.username || ""})</p>
-            <p>${p.content}</p>
-            <p>👍 ${p.upvotes} <button onclick="upvote(${
-                  p.id
-                })">Upvote</button></p>
-          </div>
-        `
+                  <div class="post fade-in">
+                    <div class="post-author">${p.first_name} ${
+                  p.username ? `(@${p.username})` : ""
+                }</div>
+                    <div class="post-content">${p.content}</div>
+                    <div class="post-actions">
+                      <span class="upvote-count">👍 ${p.upvotes}</span>
+                      <button onclick="upvote(${
+                        p.id
+                      })" class="upvote-btn">Upvote</button>
+                    </div>
+                  </div>
+                `
               )
               .join("");
           })
-          .catch(() => {
+          .catch((err) => {
+            console.error("Load posts error:", err);
             document.getElementById("posts").innerHTML =
-              "<p>Failed to load posts.</p>";
+              '<div class="no-posts">Failed to load posts. Please try again.</div>';
           });
       }
+
+      function logout() {
+        currentUser = null;
+        document.getElementById("login-section").style.display = "block";
+        document.getElementById("user-info").style.display = "none";
+        document.getElementById("logout-btn").style.display = "none";
+        document.getElementById("post-section").style.display = "none";
+        document.getElementById("posts-container").style.display = "none";
+      }
+
+      // Add keyboard shortcut for posting
+      document.addEventListener("keydown", function (e) {
+        if (e.ctrlKey && e.key === "Enter") {
+          createPost();
+        }
+      });
     </script>
   </body>
 </html>
