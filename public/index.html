@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Telegram Upvote System</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f9f9f9;
+        margin: 0;
+        padding: 0;
+      }
+      header {
+        background: #0088cc;
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .container {
+        max-width: 600px;
+        margin: 30px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .post {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: #fff;
+      }
+      .post button {
+        background: #0088cc;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .post button:hover {
+        background: #0077b3;
+      }
+      .new-post textarea {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+        resize: none;
+      }
+      .new-post button {
+        background: #0088cc;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .new-post button:hover {
+        background: #0077b3;
+      }
+      .login {
+        text-align: center;
+        margin: 50px 0;
+      }
+      .user-info img {
+        border-radius: 50%;
+        vertical-align: middle;
+        width: 30px;
+        height: 30px;
+      }
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div><b>Telegram Upvote</b></div>
+      <div class="user-info" id="user-info" style="display: none"></div>
+    </header>
+    <button
+      onclick="logout()"
+      style="
+        background: #ff4d4d;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+      "
+    >
+      Logout
+    </button>
+    <div class="container">
+      <!-- Login -->
+      <div class="login" id="login-section">
+        <script
+          async
+          src="https://telegram.org/js/telegram-widget.js?7"
+          data-telegram-login="cau_canteen_bot"
+          data-size="large"
+          data-userpic="true"
+          data-request-access="write"
+          data-onauth="onTelegramAuth(user)"
+        ></script>
+      </div>
+
+      <!-- New Post -->
+      <div class="new-post" id="post-section" style="display: none">
+        <textarea
+          id="post-content"
+          rows="3"
+          placeholder="Write something..."
+        ></textarea
+        ><br />
+        <button onclick="createPost()">Submit Post</button>
+      </div>
+
+      <!-- Posts -->
+      <h3 id="posts-heading" style="display: none">Posts</h3>
+      <div id="posts" style="display: none">Loading...</div>
+    </div>
+
+    <script>
+      let currentUser = null;
+
+      function onTelegramAuth(user) {
+        currentUser = user;
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("user-info").style.display = "flex";
+        document.getElementById("post-section").style.display = "block";
+        document.getElementById("posts-heading").style.display = "block";
+        document.getElementById("posts").style.display = "block";
+
+        document.getElementById("user-info").innerHTML = `<img src="${
+          user.photo_url
+        }" alt=""> <span><b>${user.first_name}</b> (@${
+          user.username || ""
+        })</span>`;
+
+        fetch("/auth/telegram", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(user),
+        })
+          .then((res) => res.json())
+          .then((u) => {
+            currentUser.db_id = u.id;
+            loadPosts();
+          });
+      }
+
+      function createPost() {
+        const content = document.getElementById("post-content").value;
+        if (!content) return;
+        fetch("/post", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: currentUser.db_id, content }),
+        })
+          .then((res) => res.json())
+          .then(() => {
+            document.getElementById("post-content").value = "";
+            loadPosts();
+          });
+      }
+
+      function upvote(postId) {
+        fetch("/upvote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: currentUser.db_id, post_id: postId }),
+        }).then(() => loadPosts());
+      }
+
+      function loadPosts() {
+        fetch("/posts")
+          .then((res) => res.json())
+          .then((posts) => {
+            const postsDiv = document.getElementById("posts");
+            if (posts.length === 0) {
+              postsDiv.innerHTML = "<p>No posts yet.</p>";
+              return;
+            }
+            postsDiv.innerHTML = posts
+              .map(
+                (p) => `
+          <div class="post">
+            <p><b>${p.first_name}</b> (@${p.username || ""})</p>
+            <p>${p.content}</p>
+            <p>👍 ${p.upvotes} <button onclick="upvote(${
+                  p.id
+                })">Upvote</button></p>
+          </div>
+        `
+              )
+              .join("");
+          })
+          .catch(() => {
+            document.getElementById("posts").innerHTML =
+              "<p>Failed to load posts.</p>";
+          });
+      }
+    </script>
+  </body>
+</html>
