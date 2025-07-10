@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Community - Telegram Upvote System</title>
+    <link rel="stylesheet" href="index.html" />
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #0f0f23 0%,
+          #1a1a2e 50%,
+          #16213e 100%
+        );
+        min-height: 100vh;
+        color: #e2e8f0;
+      }
+      .container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+      .card {
+        background: rgba(30, 41, 59, 0.95);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+      }
+      .posts-header {
+        color: #f1f5f9;
+        font-size: 24px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        text-align: center;
+      }
+      .post {
+        background: rgba(15, 23, 42, 0.9);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        position: relative;
+      }
+      .post-author {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        color: #cbd5e1;
+        font-weight: 600;
+      }
+      .post-content {
+        color: #e2e8f0;
+        font-size: 16px;
+        line-height: 1.7;
+        margin-bottom: 20px;
+      }
+      .post-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      .upvote-count {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #6366f1;
+        font-weight: 600;
+        font-size: 16px;
+      }
+      .upvote-btn {
+        background: linear-gradient(45deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .upvote-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      }
+      .upvote-btn::before {
+        content: "👍";
+      }
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #94a3b8;
+        font-size: 18px;
+      }
+      .no-posts {
+        text-align: center;
+        padding: 60px;
+        color: #94a3b8;
+        font-size: 18px;
+      }
+      .back-btn {
+        background: linear-gradient(45deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 20px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: rgba(30, 41, 59, 0.85);
+        border-radius: 16px;
+        padding: 16px 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
+      }
+      .filter-label {
+        font-weight: 600;
+        color: #a5b4fc;
+        font-size: 17px;
+      }
+      .filter-select {
+        padding: 8px 18px;
+        border-radius: 10px;
+        border: 1.5px solid #6366f1;
+        background: #181e2a;
+        color: #e2e8f0;
+        font-size: 16px;
+        outline: none;
+        transition: border 0.2s;
+      }
+      .filter-select:focus {
+        border: 2px solid #8b5cf6;
+      }
+      .filter-btn {
+        background: linear-gradient(45deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        padding: 9px 28px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 16px;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.18);
+        transition: transform 0.15s, box-shadow 0.15s;
+      }
+      .filter-btn:hover {
+        transform: translateY(-2px) scale(1.04);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
+      }
+      .month-slider {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding: 10px 0 18px 0;
+        margin-bottom: 10px;
+        scrollbar-width: thin;
+        scrollbar-color: #6366f1 #181e2a;
+      }
+      .month-slide {
+        flex: 0 0 auto;
+        background: #232946;
+        color: #a5b4fc;
+        border-radius: 12px;
+        padding: 8px 22px;
+        font-size: 15px;
+        font-weight: 500;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: border 0.2s, background 0.2s, color 0.2s;
+      }
+      .month-slide.selected {
+        background: linear-gradient(45deg, #6366f1, #8b5cf6);
+        color: #fff;
+        border: 2px solid #6366f1;
+      }
+      .upvote-btn.animated {
+        animation: upvotePulse 0.5s;
+      }
+      @keyframes upvotePulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 #6366f1;
+        }
+        50% {
+          transform: scale(1.18);
+          box-shadow: 0 0 16px #6366f1;
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 #6366f1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button class="back-btn" onclick="window.location.href='index.html'">
+        Post joylashga qaytish
+      </button>
+      <div class="filter-bar">
+        <span class="filter-label">Oy bo'yicha filter:</span>
+        <select id="month-filter" class="filter-select">
+          <option value="">Barcha oylar</option>
+        </select>
+        <button id="filter-btn" class="filter-btn">Filter</button>
+      </div>
+      <div class="month-slider" id="month-slider"></div>
+      <div class="card" id="posts-container">
+        <h3 class="posts-header">Jamiyat postlari</h3>
+        <div id="posts" class="loading">Postlar yuklanmoqda...</div>
+      </div>
+    </div>
+    <script>
+      function getMonthOptions() {
+        const now = new Date();
+        const options = [];
+        for (let i = 0; i < 12; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const value = d.toISOString().slice(0, 7);
+          const label = d.toLocaleString("uz-UZ", {
+            year: "numeric",
+            month: "long",
+          });
+          options.push({ value, label });
+        }
+        return options;
+      }
+      function populateMonthFilter() {
+        const select = document.getElementById("month-filter");
+        select.innerHTML = '<option value="">Barcha oylar</option>';
+        const options = getMonthOptions();
+        options.forEach((opt) => {
+          const o = document.createElement("option");
+          o.value = opt.value;
+          o.textContent = opt.label;
+          select.appendChild(o);
+        });
+      }
+      function populateMonthSlider() {
+        const slider = document.getElementById("month-slider");
+        slider.innerHTML = "";
+        const options = getMonthOptions();
+        const selected = document.getElementById("month-filter").value;
+        options.forEach((opt) => {
+          const btn = document.createElement("button");
+          btn.className =
+            "month-slide" + (opt.value === selected ? " selected" : "");
+          btn.textContent = opt.label;
+          btn.onclick = () => {
+            document.getElementById("month-filter").value = opt.value;
+            populateMonthSlider();
+          };
+          slider.appendChild(btn);
+        });
+      }
+      function upvote(postId, btn) {
+        fetch("/upvote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: null, post_id: postId }),
+        })
+          .then(() => {
+            if (btn) {
+              btn.classList.remove("animated");
+              void btn.offsetWidth;
+              btn.classList.add("animated");
+            }
+            loadPosts();
+          })
+          .catch((err) => {
+            console.error("Upvote error:", err);
+          });
+      }
+      function loadPosts() {
+        const month = document.getElementById("month-filter").value;
+        console.log("Filtering for month:", month);
+        let url = "/posts";
+        if (month) url += `?month=${month}`;
+        document.getElementById("posts").innerHTML = "Postlar yuklanmoqda...";
+        fetch(url)
+          .then((res) => res.json())
+          .then((posts) => {
+            console.log("Received posts:", posts);
+            const postsDiv = document.getElementById("posts");
+            if (posts.length === 0) {
+              postsDiv.innerHTML =
+                '<div class="no-posts">Hali postlar yo‘q. Birinchi bo‘lib ulashing!</div>';
+              return;
+            }
+            postsDiv.innerHTML = posts
+              .map(
+                (p) => `
+                  <div class="post">
+                    <div class="post-author">${p.first_name} ${
+                  p.username ? `(@${p.username})` : ""
+                }</div>
+                    <div class="post-content">${p.content}</div>
+                    <div class="post-actions">
+                      <span class="upvote-count">👍 ${p.upvotes}</span>
+                      <button onclick="upvote(${
+                        p.id
+                      }, this)" class="upvote-btn">Ovoz berish</button>
+                    </div>
+                  </div>
+                `
+              )
+              .join("");
+          })
+          .catch((err) => {
+            console.error("Load posts error:", err);
+            document.getElementById("posts").innerHTML =
+              '<div class="no-posts">Postlarni yuklashda xatolik. Iltimos, qayta urinib ko‘ring.</div>';
+          });
+      }
+      document.getElementById("filter-btn").addEventListener("click", () => {
+        loadPosts();
+        populateMonthSlider();
+      });
+      document
+        .getElementById("month-filter")
+        .addEventListener("change", populateMonthSlider);
+      populateMonthFilter();
+      populateMonthSlider();
+      loadPosts();
+    </script>
+  </body>
+</html>

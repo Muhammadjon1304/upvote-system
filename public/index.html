@@ -401,9 +401,9 @@
     <div class="container">
       <!-- Login -->
       <div class="card login-card fade-in" id="login-section">
-        <h1 class="login-title">Welcome Back!</h1>
+        <h1 class="login-title">Xush kelibsiz!</h1>
         <p class="login-subtitle">
-          Connect with Telegram to start sharing and voting
+          Telegram orqali ulaning va fikrlaringizni jamiyat bilan bo'lishing
         </p>
         <script
           async
@@ -424,15 +424,35 @@
       >
         <textarea
           id="post-content"
-          placeholder="What's on your mind? Share your thoughts with the community..."
+          placeholder="Nima haqida o'ylayapsiz? Fikringizni jamiyat bilan bo'lishing..."
         ></textarea>
-        <button onclick="createPost()" class="submit-btn">Share Post</button>
+        <button onclick="createPost()" class="submit-btn">Post ulashish</button>
+        <div
+          id="success-animation"
+          style="
+            display: none;
+            margin-top: 15px;
+            text-align: center;
+            font-size: 22px;
+            color: #22c55e;
+          "
+        >
+          ✔️ Post muvaffaqiyatli joylandi!
+        </div>
       </div>
 
-      <!-- Posts -->
-      <div class="card fade-in" id="posts-container" style="display: none">
-        <h3 class="posts-header">Community Posts</h3>
-        <div id="posts" class="loading">Loading posts...</div>
+      <!-- Go to Community Button -->
+      <div
+        class="card fade-in"
+        id="community-btn-section"
+        style="display: none"
+      >
+        <button
+          onclick="window.location.href='community.html'"
+          class="submit-btn"
+        >
+          Jamiyatga o'tish
+        </button>
       </div>
     </div>
 
@@ -445,7 +465,8 @@
         document.getElementById("user-info").style.display = "flex";
         document.getElementById("logout-btn").style.display = "block";
         document.getElementById("post-section").style.display = "block";
-        document.getElementById("posts-container").style.display = "block";
+        document.getElementById("community-btn-section").style.display =
+          "block";
 
         document.getElementById("user-info").innerHTML = `
           <img src="${user.photo_url}" alt="Profile"> 
@@ -462,7 +483,7 @@
           .then((res) => res.json())
           .then((u) => {
             currentUser.db_id = u.id;
-            loadPosts();
+            // loadPosts(); // Removed posts loading
           })
           .catch((err) => {
             console.error("Auth error:", err);
@@ -474,7 +495,7 @@
         if (!content) return;
 
         const submitBtn = document.querySelector(".submit-btn");
-        submitBtn.textContent = "Posting...";
+        submitBtn.textContent = "Yuborilmoqda...";
         submitBtn.disabled = true;
 
         fetch("/post", {
@@ -485,64 +506,29 @@
           .then((res) => res.json())
           .then(() => {
             document.getElementById("post-content").value = "";
-            loadPosts();
+            // Show animation
+            const anim = document.getElementById("success-animation");
+            anim.style.display = "block";
+            anim.style.opacity = 1;
+            anim.style.transition = "opacity 1s";
+            setTimeout(() => {
+              anim.style.opacity = 0;
+              setTimeout(() => {
+                anim.style.display = "none";
+                anim.style.opacity = 1;
+              }, 1000);
+            }, 1500);
           })
           .catch((err) => {
             console.error("Post error:", err);
           })
           .finally(() => {
-            submitBtn.textContent = "Share Post";
+            submitBtn.textContent = "Post ulashish";
             submitBtn.disabled = false;
           });
       }
 
-      function upvote(postId) {
-        fetch("/upvote", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: currentUser.db_id, post_id: postId }),
-        })
-          .then(() => loadPosts())
-          .catch((err) => {
-            console.error("Upvote error:", err);
-          });
-      }
-
-      function loadPosts() {
-        fetch("/posts")
-          .then((res) => res.json())
-          .then((posts) => {
-            const postsDiv = document.getElementById("posts");
-            if (posts.length === 0) {
-              postsDiv.innerHTML =
-                '<div class="no-posts">No posts yet. Be the first to share!</div>';
-              return;
-            }
-            postsDiv.innerHTML = posts
-              .map(
-                (p) => `
-                  <div class="post fade-in">
-                    <div class="post-author">${p.first_name} ${
-                  p.username ? `(@${p.username})` : ""
-                }</div>
-                    <div class="post-content">${p.content}</div>
-                    <div class="post-actions">
-                      <span class="upvote-count">👍 ${p.upvotes}</span>
-                      <button onclick="upvote(${
-                        p.id
-                      })" class="upvote-btn">Upvote</button>
-                    </div>
-                  </div>
-                `
-              )
-              .join("");
-          })
-          .catch((err) => {
-            console.error("Load posts error:", err);
-            document.getElementById("posts").innerHTML =
-              '<div class="no-posts">Failed to load posts. Please try again.</div>';
-          });
-      }
+      // Remove posts and upvote logic from this file
 
       function logout() {
         currentUser = null;
@@ -550,7 +536,7 @@
         document.getElementById("user-info").style.display = "none";
         document.getElementById("logout-btn").style.display = "none";
         document.getElementById("post-section").style.display = "none";
-        document.getElementById("posts-container").style.display = "none";
+        document.getElementById("community-btn-section").style.display = "none";
       }
 
       // Add keyboard shortcut for posting
