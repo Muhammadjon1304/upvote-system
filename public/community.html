@@ -4,8 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Community - Telegram Upvote System</title>
-    <link rel="stylesheet" href="index.html" />
+    <!-- If you have a separate CSS file, link it here. Otherwise, styles are inline below. -->
     <style>
+      /* Base Styles */
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(
@@ -16,6 +17,8 @@
         );
         min-height: 100vh;
         color: #e2e8f0;
+        margin: 0;
+        padding: 0;
       }
       .container {
         max-width: 800px;
@@ -52,12 +55,14 @@
         margin-bottom: 15px;
         color: #cbd5e1;
         font-weight: 600;
+        word-break: break-word;
       }
       .post-content {
         color: #e2e8f0;
         font-size: 16px;
         line-height: 1.7;
         margin-bottom: 20px;
+        word-break: break-word;
       }
       .post-actions {
         display: flex;
@@ -83,6 +88,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
+        transition: transform 0.15s, box-shadow 0.15s;
       }
       .upvote-btn:hover {
         transform: translateY(-2px);
@@ -91,17 +97,15 @@
       .upvote-btn::before {
         content: "👍";
       }
-      .loading {
+      .loading,
+      .no-posts {
         text-align: center;
-        padding: 40px;
+        padding: 40px 10px;
         color: #94a3b8;
         font-size: 18px;
       }
       .no-posts {
-        text-align: center;
-        padding: 60px;
-        color: #94a3b8;
-        font-size: 18px;
+        padding: 60px 10px;
       }
       .back-btn {
         background: linear-gradient(45deg, #6366f1, #8b5cf6);
@@ -116,6 +120,11 @@
         display: block;
         margin-left: auto;
         margin-right: auto;
+        transition: transform 0.15s, box-shadow 0.15s;
+      }
+      .back-btn:hover {
+        transform: translateY(-2px) scale(1.04);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
       }
       .filter-bar {
         display: flex;
@@ -126,6 +135,7 @@
         padding: 16px 24px;
         margin-bottom: 24px;
         box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
+        flex-wrap: wrap;
       }
       .filter-label {
         font-weight: 600;
@@ -181,6 +191,7 @@
         border: 2px solid transparent;
         cursor: pointer;
         transition: border 0.2s, background 0.2s, color 0.2s;
+        white-space: nowrap;
       }
       .month-slide.selected {
         background: linear-gradient(45deg, #6366f1, #8b5cf6);
@@ -204,10 +215,107 @@
           box-shadow: 0 0 0 #6366f1;
         }
       }
+      /* Responsive Styles */
+      @media (max-width: 600px) {
+        .container {
+          max-width: 100%;
+          padding: 0 6px;
+        }
+        .card {
+          padding: 16px 6px;
+          border-radius: 12px;
+        }
+        .posts-header {
+          font-size: 19px;
+        }
+        .post {
+          padding: 14px 6px;
+          border-radius: 10px;
+        }
+        .post-content {
+          font-size: 15px;
+        }
+        .post-author {
+          font-size: 14px;
+        }
+        .upvote-count {
+          font-size: 14px;
+        }
+        .upvote-btn {
+          padding: 6px 12px;
+          font-size: 14px;
+        }
+        .back-btn {
+          font-size: 14px;
+          padding: 8px 12px;
+        }
+        .filter-bar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 10px;
+          padding: 10px 8px;
+        }
+        .filter-label {
+          font-size: 15px;
+        }
+        .filter-select {
+          font-size: 14px;
+          padding: 6px 10px;
+        }
+        .filter-btn {
+          font-size: 14px;
+          padding: 7px 14px;
+        }
+        .month-slider {
+          gap: 6px;
+          padding: 6px 0 10px 0;
+        }
+        .month-slide {
+          font-size: 13px;
+          padding: 6px 10px;
+          border-radius: 8px;
+        }
+        .loading,
+        .no-posts {
+          font-size: 15px;
+          padding: 30px 4px;
+        }
+      }
+      @media (max-width: 400px) {
+        .container {
+          padding: 0 2px;
+        }
+        .card {
+          padding: 8px 2px;
+        }
+        .filter-bar {
+          padding: 6px 2px;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="container">
+      <!-- Telegram Login Section -->
+      <div
+        class="card login-card"
+        id="login-section"
+        style="display: none; text-align: center"
+      >
+        <h2 class="login-title">Telegram orqali tizimga kiring</h2>
+        <p class="login-subtitle">
+          Upvote qilish va postlar joylash uchun Telegram orqali tizimga kiring.
+        </p>
+        <script
+          async
+          src="https://telegram.org/js/telegram-widget.js?7"
+          data-telegram-login="cau_canteen_bot"
+          data-size="large"
+          data-userpic="true"
+          data-request-access="write"
+          data-onauth="onTelegramAuth(user)"
+        ></script>
+      </div>
       <button class="back-btn" onclick="window.location.href='index.html'">
         Post joylashga qaytish
       </button>
@@ -218,20 +326,81 @@
         </select>
         <button id="filter-btn" class="filter-btn">Filter</button>
       </div>
-      <div class="month-slider" id="month-slider"></div>
       <div class="card" id="posts-container">
         <h3 class="posts-header">Jamiyat postlari</h3>
         <div id="posts" class="loading">Postlar yuklanmoqda...</div>
       </div>
+      <!-- Animated Login Popup -->
+      <div
+        id="login-popup"
+        style="
+          display: none;
+          position: fixed;
+          left: 50%;
+          top: 20px;
+          transform: translateX(-50%);
+          background: rgba(30, 41, 59, 0.98);
+          color: #fff;
+          border-radius: 16px;
+          box-shadow: 0 8px 32px rgba(99, 102, 241, 0.25);
+          padding: 28px 32px;
+          z-index: 9999;
+          font-size: 18px;
+          text-align: center;
+          transition: opacity 0.4s;
+        "
+      >
+        <div style="font-size: 32px; margin-bottom: 10px">🔒</div>
+        <div style="margin-bottom: 10px">
+          Upvote qilish uchun Telegram orqali tizimga kiring!
+        </div>
+        <button
+          onclick="showLoginSection()"
+          style="
+            background: linear-gradient(45deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+          "
+        >
+          Telegram orqali kirish
+        </button>
+      </div>
     </div>
     <script>
+      let currentUser = null;
+
+      // Try to get user from localStorage (if previously logged in)
+      if (localStorage.getItem("currentUser")) {
+        currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      }
+
+      // Listen for Telegram auth from index.html (if user navigates from there)
+      window.addEventListener("message", function (event) {
+        if (event.data && event.data.type === "telegram_auth") {
+          currentUser = event.data.user;
+          localStorage.setItem("currentUser", JSON.stringify(currentUser));
+        }
+      });
       function getMonthOptions() {
         const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
         const options = [];
         for (let i = 0; i < 12; i++) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const value = d.toISOString().slice(0, 7);
-          const label = d.toLocaleString("uz-UZ", {
+          let year = currentYear;
+          let month = currentMonth - i;
+          if (month < 0) {
+            year = currentYear - 1;
+            month = 12 + month;
+          }
+          const targetDate = new Date(year, month, 1);
+          const value = `${year}-${String(month + 1).padStart(2, "0")}`;
+          const label = targetDate.toLocaleString("uz-UZ", {
             year: "numeric",
             month: "long",
           });
@@ -250,30 +419,30 @@
           select.appendChild(o);
         });
       }
-      function populateMonthSlider() {
-        const slider = document.getElementById("month-slider");
-        slider.innerHTML = "";
-        const options = getMonthOptions();
-        const selected = document.getElementById("month-filter").value;
-        options.forEach((opt) => {
-          const btn = document.createElement("button");
-          btn.className =
-            "month-slide" + (opt.value === selected ? " selected" : "");
-          btn.textContent = opt.label;
-          btn.onclick = () => {
-            document.getElementById("month-filter").value = opt.value;
-            populateMonthSlider();
-          };
-          slider.appendChild(btn);
-        });
-      }
       function upvote(postId, btn) {
+        if (!currentUser || !currentUser.db_id) {
+          // Show animated login popup
+          const popup = document.getElementById("login-popup");
+          popup.style.display = "block";
+          popup.style.opacity = 1;
+          setTimeout(() => {
+            popup.style.opacity = 0.95;
+          }, 10);
+          setTimeout(() => {
+            popup.style.opacity = 0;
+            setTimeout(() => {
+              popup.style.display = "none";
+            }, 400);
+          }, 3500);
+          return;
+        }
         fetch("/upvote", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: null, post_id: postId }),
+          body: JSON.stringify({ user_id: currentUser.db_id, post_id: postId }),
         })
-          .then(() => {
+          .then((res) => res.json())
+          .then((data) => {
             if (btn) {
               btn.classList.remove("animated");
               void btn.offsetWidth;
@@ -281,33 +450,38 @@
             }
             loadPosts();
           })
-          .catch((err) => {
-            console.error("Upvote error:", err);
+          .catch(() => {
+            // Optionally show error to user
           });
       }
       function loadPosts() {
         const month = document.getElementById("month-filter").value;
-        console.log("Filtering for month:", month);
         let url = "/posts";
-        if (month) url += `?month=${month}`;
+        if (month) {
+          url += `?month=${month}`;
+        }
         document.getElementById("posts").innerHTML = "Postlar yuklanmoqda...";
         fetch(url)
           .then((res) => res.json())
           .then((posts) => {
-            console.log("Received posts:", posts);
             const postsDiv = document.getElementById("posts");
             if (posts.length === 0) {
               postsDiv.innerHTML =
-                '<div class="no-posts">Hali postlar yo‘q. Birinchi bo‘lib ulashing!</div>';
+                '<div class="no-posts">Hali postlar yoq. Birinchi bolib ulashing!</div>';
               return;
             }
             postsDiv.innerHTML = posts
               .map(
                 (p) => `
                   <div class="post">
-                    <div class="post-author">${p.first_name} ${
-                  p.username ? `(@${p.username})` : ""
-                }</div>
+                    <div class="post-author">
+                      ${
+                        p.photo_url
+                          ? `<img src="${p.photo_url}" alt="Profile" style="width:32px;height:32px;border-radius:50%;border:2px solid #6366f1;vertical-align:middle;margin-right:8px;">`
+                          : ""
+                      }
+                      ${p.first_name} ${p.username ? `(@${p.username})` : ""}
+                    </div>
                     <div class="post-content">${p.content}</div>
                     <div class="post-actions">
                       <span class="upvote-count">👍 ${p.upvotes}</span>
@@ -320,22 +494,52 @@
               )
               .join("");
           })
-          .catch((err) => {
-            console.error("Load posts error:", err);
+          .catch(() => {
             document.getElementById("posts").innerHTML =
-              '<div class="no-posts">Postlarni yuklashda xatolik. Iltimos, qayta urinib ko‘ring.</div>';
+              '<div class="no-posts">Postlarni yuklashda xatolik. Iltimos, qayta urinib koring.</div>';
           });
       }
       document.getElementById("filter-btn").addEventListener("click", () => {
         loadPosts();
-        populateMonthSlider();
       });
       document
         .getElementById("month-filter")
-        .addEventListener("change", populateMonthSlider);
+        .addEventListener("change", () => {});
       populateMonthFilter();
-      populateMonthSlider();
       loadPosts();
+
+      // Telegram login handler (shared with index.html)
+      function onTelegramAuth(user) {
+        currentUser = user;
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+        document.getElementById("login-section").style.display = "none";
+        loadPosts();
+      }
+
+      function showLoginSection() {
+        const loginSection = document.getElementById("login-section");
+        loginSection.style.display = "block";
+        document.getElementById("login-popup").style.display = "none";
+        // Scroll to login section for better UX
+        setTimeout(() => {
+          loginSection.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+      }
+
+      // Show login section if not logged in
+      window.onload = function () {
+        if (!currentUser || !currentUser.db_id) {
+          const loginSection = document.getElementById("login-section");
+          loginSection.style.display = "block";
+          // Scroll to login section if coming from popup
+          setTimeout(() => {
+            loginSection.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }, 100);
+        }
+      };
     </script>
   </body>
 </html>
