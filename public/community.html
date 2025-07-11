@@ -4,8 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Community - Telegram Upvote System</title>
-    <link rel="stylesheet" href="index.html" />
+    <!-- If you have a separate CSS file, link it here. Otherwise, styles are inline below. -->
     <style>
+      /* Base Styles */
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(
@@ -16,6 +17,8 @@
         );
         min-height: 100vh;
         color: #e2e8f0;
+        margin: 0;
+        padding: 0;
       }
       .container {
         max-width: 800px;
@@ -52,12 +55,14 @@
         margin-bottom: 15px;
         color: #cbd5e1;
         font-weight: 600;
+        word-break: break-word;
       }
       .post-content {
         color: #e2e8f0;
         font-size: 16px;
         line-height: 1.7;
         margin-bottom: 20px;
+        word-break: break-word;
       }
       .post-actions {
         display: flex;
@@ -83,6 +88,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
+        transition: transform 0.15s, box-shadow 0.15s;
       }
       .upvote-btn:hover {
         transform: translateY(-2px);
@@ -91,17 +97,15 @@
       .upvote-btn::before {
         content: "👍";
       }
-      .loading {
+      .loading,
+      .no-posts {
         text-align: center;
-        padding: 40px;
+        padding: 40px 10px;
         color: #94a3b8;
         font-size: 18px;
       }
       .no-posts {
-        text-align: center;
-        padding: 60px;
-        color: #94a3b8;
-        font-size: 18px;
+        padding: 60px 10px;
       }
       .back-btn {
         background: linear-gradient(45deg, #6366f1, #8b5cf6);
@@ -116,6 +120,11 @@
         display: block;
         margin-left: auto;
         margin-right: auto;
+        transition: transform 0.15s, box-shadow 0.15s;
+      }
+      .back-btn:hover {
+        transform: translateY(-2px) scale(1.04);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
       }
       .filter-bar {
         display: flex;
@@ -126,6 +135,7 @@
         padding: 16px 24px;
         margin-bottom: 24px;
         box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
+        flex-wrap: wrap;
       }
       .filter-label {
         font-weight: 600;
@@ -181,6 +191,7 @@
         border: 2px solid transparent;
         cursor: pointer;
         transition: border 0.2s, background 0.2s, color 0.2s;
+        white-space: nowrap;
       }
       .month-slide.selected {
         background: linear-gradient(45deg, #6366f1, #8b5cf6);
@@ -204,6 +215,83 @@
           box-shadow: 0 0 0 #6366f1;
         }
       }
+      /* Responsive Styles */
+      @media (max-width: 600px) {
+        .container {
+          max-width: 100%;
+          padding: 0 6px;
+        }
+        .card {
+          padding: 16px 6px;
+          border-radius: 12px;
+        }
+        .posts-header {
+          font-size: 19px;
+        }
+        .post {
+          padding: 14px 6px;
+          border-radius: 10px;
+        }
+        .post-content {
+          font-size: 15px;
+        }
+        .post-author {
+          font-size: 14px;
+        }
+        .upvote-count {
+          font-size: 14px;
+        }
+        .upvote-btn {
+          padding: 6px 12px;
+          font-size: 14px;
+        }
+        .back-btn {
+          font-size: 14px;
+          padding: 8px 12px;
+        }
+        .filter-bar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 10px;
+          padding: 10px 8px;
+        }
+        .filter-label {
+          font-size: 15px;
+        }
+        .filter-select {
+          font-size: 14px;
+          padding: 6px 10px;
+        }
+        .filter-btn {
+          font-size: 14px;
+          padding: 7px 14px;
+        }
+        .month-slider {
+          gap: 6px;
+          padding: 6px 0 10px 0;
+        }
+        .month-slide {
+          font-size: 13px;
+          padding: 6px 10px;
+          border-radius: 8px;
+        }
+        .loading,
+        .no-posts {
+          font-size: 15px;
+          padding: 30px 4px;
+        }
+      }
+      @media (max-width: 400px) {
+        .container {
+          padding: 0 2px;
+        }
+        .card {
+          padding: 8px 2px;
+        }
+        .filter-bar {
+          padding: 6px 2px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -218,7 +306,6 @@
         </select>
         <button id="filter-btn" class="filter-btn">Filter</button>
       </div>
-      <div class="month-slider" id="month-slider"></div>
       <div class="card" id="posts-container">
         <h3 class="posts-header">Jamiyat postlari</h3>
         <div id="posts" class="loading">Postlar yuklanmoqda...</div>
@@ -227,11 +314,19 @@
     <script>
       function getMonthOptions() {
         const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
         const options = [];
         for (let i = 0; i < 12; i++) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const value = d.toISOString().slice(0, 7);
-          const label = d.toLocaleString("uz-UZ", {
+          let year = currentYear;
+          let month = currentMonth - i;
+          if (month < 0) {
+            year = currentYear - 1;
+            month = 12 + month;
+          }
+          const targetDate = new Date(year, month, 1);
+          const value = `${year}-${String(month + 1).padStart(2, "0")}`;
+          const label = targetDate.toLocaleString("uz-UZ", {
             year: "numeric",
             month: "long",
           });
@@ -250,23 +345,6 @@
           select.appendChild(o);
         });
       }
-      function populateMonthSlider() {
-        const slider = document.getElementById("month-slider");
-        slider.innerHTML = "";
-        const options = getMonthOptions();
-        const selected = document.getElementById("month-filter").value;
-        options.forEach((opt) => {
-          const btn = document.createElement("button");
-          btn.className =
-            "month-slide" + (opt.value === selected ? " selected" : "");
-          btn.textContent = opt.label;
-          btn.onclick = () => {
-            document.getElementById("month-filter").value = opt.value;
-            populateMonthSlider();
-          };
-          slider.appendChild(btn);
-        });
-      }
       function upvote(postId, btn) {
         fetch("/upvote", {
           method: "POST",
@@ -281,24 +359,24 @@
             }
             loadPosts();
           })
-          .catch((err) => {
-            console.error("Upvote error:", err);
+          .catch(() => {
+            // Optionally show error to user
           });
       }
       function loadPosts() {
         const month = document.getElementById("month-filter").value;
-        console.log("Filtering for month:", month);
         let url = "/posts";
-        if (month) url += `?month=${month}`;
+        if (month) {
+          url += `?month=${month}`;
+        }
         document.getElementById("posts").innerHTML = "Postlar yuklanmoqda...";
         fetch(url)
           .then((res) => res.json())
           .then((posts) => {
-            console.log("Received posts:", posts);
             const postsDiv = document.getElementById("posts");
             if (posts.length === 0) {
               postsDiv.innerHTML =
-                '<div class="no-posts">Hali postlar yo‘q. Birinchi bo‘lib ulashing!</div>';
+                '<div class="no-posts">Hali postlar yoq. Birinchi bolib ulashing!</div>';
               return;
             }
             postsDiv.innerHTML = posts
@@ -320,21 +398,18 @@
               )
               .join("");
           })
-          .catch((err) => {
-            console.error("Load posts error:", err);
+          .catch(() => {
             document.getElementById("posts").innerHTML =
-              '<div class="no-posts">Postlarni yuklashda xatolik. Iltimos, qayta urinib ko‘ring.</div>';
+              '<div class="no-posts">Postlarni yuklashda xatolik. Iltimos, qayta urinib koring.</div>';
           });
       }
       document.getElementById("filter-btn").addEventListener("click", () => {
         loadPosts();
-        populateMonthSlider();
       });
       document
         .getElementById("month-filter")
-        .addEventListener("change", populateMonthSlider);
+        .addEventListener("change", () => {});
       populateMonthFilter();
-      populateMonthSlider();
       loadPosts();
     </script>
   </body>

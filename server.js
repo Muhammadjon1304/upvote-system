@@ -110,26 +110,19 @@ app.get("/posts", async (req, res) => {
     `;
     let params = [];
     if (month) {
-      // Calculate first and next month
-      const [year, mon] = month.split("-");
-      const firstDay = `${year}-${mon}-01`;
-      let nextMonth, nextYear;
-      if (mon === "12") {
-        nextMonth = "01";
-        nextYear = (parseInt(year) + 1).toString();
-      } else {
-        nextMonth = (parseInt(mon) + 1).toString().padStart(2, "0");
-        nextYear = year;
-      }
-      const firstDayNextMonth = `${nextYear}-${nextMonth}-01`;
-      query += ` WHERE posts.created_at >= $1 AND posts.created_at < $2`;
-      params.push(firstDay, firstDayNextMonth);
+      // Use PostgreSQL's date_trunc function to filter by month
+      // This is more reliable than manual date calculations
+      query += ` WHERE DATE_TRUNC('month', posts.created_at) = DATE_TRUNC('month', $1::date)`;
+      params.push(`${month}-01`);
     }
+
     query += ` GROUP BY posts.id, users.username, users.first_name, users.photo_url
       ORDER BY upvotes DESC, posts.created_at DESC`;
     const result = await pool.query(query, params);
+
     res.send(result.rows);
   } catch (err) {
+    console.error("Error in /posts:", err);
     res.status(500).send(err);
   }
 });
